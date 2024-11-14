@@ -31,6 +31,7 @@ class MultiImageObsEncoder(ModuleAttrMixin):
 
         rgb_keys = list()
         low_dim_keys = list()
+        rgbd_keys = list()
         key_model_map = nn.ModuleDict()
         key_transform_map = nn.ModuleDict()
         key_shape_map = dict()
@@ -64,7 +65,7 @@ class MultiImageObsEncoder(ModuleAttrMixin):
                             root_module=this_model,
                             predicate=lambda x: isinstance(x, nn.BatchNorm2d),
                             func=lambda x: nn.GroupNorm(
-                                num_groups=x.num_features//16, 
+                                num_groups=x.num_features // 16, 
                                 num_channels=x.num_features)
                         )
                     key_model_map[key] = this_model
@@ -111,6 +112,57 @@ class MultiImageObsEncoder(ModuleAttrMixin):
                 key_transform_map[key] = this_transform
             elif type == 'low_dim':
                 low_dim_keys.append(key)
+            elif type == 'rgbd':
+                rgbd_keys.append(key)
+                # Handle rgbd similarly to rgb
+                this_model = None
+                if not share_rgb_model:
+                    if isinstance(rgb_model, dict):
+                        this_model = rgb_model[key]
+                    else:
+                        assert isinstance(rgb_model, nn.Module)
+                        this_model = copy.deepcopy(rgb_model)
+                if this_model is not None:
+                    if use_group_norm:
+                        this_model = replace_submodules(
+                            root_module=this_model,
+                            predicate=lambda x: isinstance(x, nn.BatchNorm2d),
+                            func=lambda x: nn.GroupNorm(
+                                num_groups=x.num_features // 16,
+                                num_channels=x.num_features)
+                        )
+                    key_model_map[key] = this_model
+                input_shape = shape
+                this_resizer = nn.Identity()
+                if resize_shape is not None:
+                    if isinstance(resize_shape, dict):
+                        h, w = resize_shape[key]
+                    else:
+                        h, w = resize_shape
+                    this_resizer = torchvision.transforms.Resize(size=(h, w))
+                    input_shape = (shape[0], h, w)
+                this_randomizer = nn.Identity()
+                if crop_shape is not None:
+                    if isinstance(crop_shape, dict):
+                        h, w = crop_shape[key]
+                    else:
+                        h, w = crop_shape
+                    if random_crop:
+                        this_randomizer = CropRandomizer(
+                            input_shape=input_shape,
+                            crop_height=h,
+                            crop_width=w,
+                            num_crops=1,
+                            pos_enc=False
+                        )
+                    else:
+                        this_randomizer = torchvision.transforms.CenterCrop((h, w))
+                this_normalizer = nn.Identity()
+                if imagenet_norm:
+                    this_normalizer = torchvision.transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406, 0.5], std=[0.229, 0.224, 0.225, 0.5])
+                this_transform = nn.Sequential(this_resizer, this_randomizer, this_normalizer)
+                key_transform_map[key] = this_transform
             else:
                 raise RuntimeError(f"Unsupported obs type: {type}")
         rgb_keys = sorted(rgb_keys)
@@ -122,6 +174,7 @@ class MultiImageObsEncoder(ModuleAttrMixin):
         self.share_rgb_model = share_rgb_model
         self.rgb_keys = rgb_keys
         self.low_dim_keys = low_dim_keys
+        self.rgbd_keys = rgbd_keys
         self.key_shape_map = key_shape_map
 
     def forward(self, obs_dict):

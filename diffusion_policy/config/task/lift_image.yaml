@@ -3,12 +3,24 @@ name: lift_image
 shape_meta: &shape_meta
   # acceptable types: rgb, low_dim
   obs:
-    frontview_image:
-      shape: [3, 128, 128]
-      type: rgb
-    agentview_image:
-      shape: [3, 128, 128]
-      type: rgb
+    # frontview_image:
+    #   shape: [3, 128, 128]
+    #   type: rgb
+    frontview_rgbd:
+      shape: [4, 128, 128]
+      type: rgbd
+    # agentview_image:
+    #   shape: [3, 128, 128]
+    #   type: rgb
+    agentview_rgbd:
+      shape: [4, 128, 128]
+      type: rgbd
+    # sideview_image:
+    #   shape: [3, 128, 128]
+    #   type: rgb
+    sideview_rgbd:
+      shape: [4, 128, 128]
+      type: rgbd
     robot0_eye_in_hand_image:
       shape: [3, 128, 128]
       type: rgb
@@ -26,6 +38,7 @@ task_name: &task_name lift
 dataset_type: &dataset_type ph
 # dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/image.hdf5
 dataset_path: &dataset_path data/robomimic/datasets/lift/obs/lift_200.hdf5
+val_dataset_path: &val_dataset_path data/robomimic/datasets/lift/obs/lift_200_val.hdf5
 abs_action: &abs_action False
 
 env_runner:
@@ -56,6 +69,7 @@ dataset:
   _target_: diffusion_policy.dataset.robomimic_replay_image_dataset.RobomimicReplayImageDataset
   shape_meta: *shape_meta
   dataset_path: *dataset_path
+  val_dataset_path: *val_dataset_path
   horizon: ${horizon}
   pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
   pad_after: ${eval:'${n_action_steps}-1'}
