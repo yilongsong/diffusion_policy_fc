@@ -99,7 +99,7 @@ class MultiImageObsEncoder(ModuleAttrMixin):
                             pos_enc=False
                         )
                     else:
-                        this_normalizer = torchvision.transforms.CenterCrop(
+                        this_randomizer = torchvision.transforms.CenterCrop(
                             size=(h,w)
                         )
                 # configure normalizer
@@ -156,11 +156,19 @@ class MultiImageObsEncoder(ModuleAttrMixin):
                             pos_enc=False
                         )
                     else:
-                        this_randomizer = torchvision.transforms.CenterCrop((h, w))
+                        this_randomizer = torchvision.transforms.CenterCrop(
+                            size=(h, w)
+                        )
                 this_normalizer = nn.Identity()
                 if imagenet_norm:
-                    this_normalizer = torchvision.transforms.Normalize(
-                        mean=[0.485, 0.456, 0.406, 0.5], std=[0.229, 0.224, 0.225, 0.5])
+                    def normalize_rgb_only(tensor):
+                        rgb = tensor[:3]
+                        depth = tensor[3:]
+                        normalized_rgb = torchvision.transforms.functional.normalize(
+                            rgb, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                        return torch.cat([normalized_rgb, depth], dim=0)
+
+                    this_normalizer = torchvision.transforms.Lambda(normalize_rgb_only)
                 this_transform = nn.Sequential(this_resizer, this_randomizer, this_normalizer)
                 key_transform_map[key] = this_transform
             else:
