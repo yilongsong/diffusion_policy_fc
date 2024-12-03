@@ -137,7 +137,8 @@ class RobomimicReplayImageDataset(BaseImageDataset):
 
     def get_validation_dataset(self):
         if self.val_dataset_path:
-            val_replay_buffer = ReplayBuffer.copy_from_path(self.val_dataset_path)
+            val_dataset_path_zarr = self.val_dataset_path + '.zarr.zip'
+            val_replay_buffer = ReplayBuffer.copy_from_path(val_dataset_path_zarr)
             val_sampler = SequenceSampler(
                 replay_buffer=val_replay_buffer, 
                 sequence_length=self.horizon,

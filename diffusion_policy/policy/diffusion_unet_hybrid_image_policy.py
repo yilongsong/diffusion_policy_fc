@@ -48,6 +48,7 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
         obs_config = {
             'low_dim': [],
             'rgb': [],
+            'rgbd': [],
             'depth': [],
             'scan': []
         }
@@ -61,6 +62,8 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
                 obs_config['rgb'].append(key)
             elif type == 'low_dim':
                 obs_config['low_dim'].append(key)
+            elif type == 'rgbd':
+                obs_config['rgbd'].append(key)
             else:
                 raise RuntimeError(f"Unsupported obs type: {type}")
 

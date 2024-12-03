@@ -12,6 +12,11 @@ from diffusion_policy.model.diffusion.mask_generator import LowdimMaskGenerator
 from diffusion_policy.model.vision.multi_image_obs_encoder import MultiImageObsEncoder
 from diffusion_policy.common.pytorch_util import dict_apply
 
+### Yilong
+###########################################################################
+from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
+###########################################################################
+
 class DiffusionUnetImagePolicy(BaseImagePolicy):
     def __init__(self, 
             shape_meta: dict,
@@ -27,6 +32,11 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
             kernel_size=5,
             n_groups=8,
             cond_predict_scale=True,
+            
+            ### Yilong
+            ###########################################################################
+            decoder_model_path=None,
+            ###########################################################################
             # parameters passed to step
             **kwargs):
         super().__init__()
@@ -78,6 +88,29 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
         if num_inference_steps is None:
             num_inference_steps = noise_scheduler.config.num_train_timesteps
         self.num_inference_steps = num_inference_steps
+        
+        # Yilong
+        ###########################################################################
+        if decoder_model_path != None:
+            cameras=["frontview_image", "sideview_image"]
+            stats_path='/home/yilong/Documents/ae_data/random_processing/iiwa16168/action_statistics_delta_position+gripper.npz'
+        
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            
+            self.action_identifier = load_action_identifier(
+                conv_path=None,
+                mlp_path=decoder_model_path,
+                resnet_version='resnet18',
+                video_length=2,
+                in_channels=len(cameras) * 6,  # Adjusted for multiple cameras
+                action_length=1,
+                num_classes=4,
+                num_mlp_layers=3,
+                stats_path=stats_path,
+                coordinate_system='global',
+                camera_name=cameras[0].split('_')[0]  # Use the first camera for initialization
+            ).to(device)
+        ###########################################################################
     
     # ========= inference  ============
     def conditional_sample(self, 

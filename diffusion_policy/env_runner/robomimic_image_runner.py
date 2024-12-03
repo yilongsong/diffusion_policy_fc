@@ -23,6 +23,8 @@ import robomimic.utils.file_utils as FileUtils
 import robomimic.utils.env_utils as EnvUtils
 import robomimic.utils.obs_utils as ObsUtils
 
+robots = ['Panda']
+
 
 def create_env(env_meta, shape_meta, enable_render=True):
     modality_mapping = collections.defaultdict(list)
@@ -87,6 +89,7 @@ class RobomimicImageRunner(BaseImageRunner):
             rotation_transformer = RotationTransformer('axis_angle', 'rotation_6d')
 
         def env_fn():
+            env_meta['env_kwargs']['robots'] = robots
             robomimic_env = create_env(
                 env_meta=env_meta, 
                 shape_meta=shape_meta
