@@ -38,8 +38,8 @@ shape_meta: &shape_meta
 task_name: &task_name lift
 dataset_type: &dataset_type ph
 # dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/image.hdf5
-dataset_path: &dataset_path data/robomimic/datasets/lift/obs/lift_200.hdf5
-val_dataset_path: &val_dataset_path data/robomimic/datasets/lift/obs/lift_200.hdf5
+dataset_path: &dataset_path data/robomimic/datasets/lift/obs/lift_panda1000_policy_obs_cropped_rgbd+color_mask.hdf5
+val_dataset_path: &val_dataset_path data/robomimic/datasets/lift/obs/lift_panda1000_policy_obs_cropped_rgbd+color_mask.hdf5
 abs_action: &abs_action False
 
 env_runner:
@@ -57,7 +57,7 @@ env_runner:
   max_steps: ${eval:'500 if "${task.dataset_type}" == "mh" else 400'}
   n_obs_steps: ${n_obs_steps}
   n_action_steps: ${n_action_steps}
-  render_obs_key: 'agentview_image'
+  render_obs_key: 'frontview_image'
   fps: 10
   crf: 22
   past_action: ${past_action_visible}

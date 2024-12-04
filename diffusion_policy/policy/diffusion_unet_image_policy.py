@@ -35,7 +35,8 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
             
             ### Yilong
             ###########################################################################
-            decoder_model_path=None,
+            #decoder_model_path=None,
+            decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-bs1632_mlp-53-353.pth',
             ###########################################################################
             # parameters passed to step
             **kwargs):
@@ -91,25 +92,7 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
         
         # Yilong
         ###########################################################################
-        if decoder_model_path != None:
-            cameras=["frontview_image", "sideview_image"]
-            stats_path='/home/yilong/Documents/ae_data/random_processing/iiwa16168/action_statistics_delta_position+gripper.npz'
-        
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            
-            self.action_identifier = load_action_identifier(
-                conv_path=None,
-                mlp_path=decoder_model_path,
-                resnet_version='resnet18',
-                video_length=2,
-                in_channels=len(cameras) * 6,  # Adjusted for multiple cameras
-                action_length=1,
-                num_classes=4,
-                num_mlp_layers=3,
-                stats_path=stats_path,
-                coordinate_system='global',
-                camera_name=cameras[0].split('_')[0]  # Use the first camera for initialization
-            ).to(device)
+        self.decoder_model_path = decoder_model_path
         ###########################################################################
     
     # ========= inference  ============
@@ -216,6 +199,14 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
             'action': action,
             'action_pred': action_pred
         }
+        
+        # Yilong
+        ###########################################################################
+        if self.decoder_model_path != None:
+            result['start'] = start
+            result['end'] = end
+        ###########################################################################  
+        
         return result
 
     # ========= training  ============
