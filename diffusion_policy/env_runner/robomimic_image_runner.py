@@ -363,7 +363,7 @@ class RobomimicImageRunner(BaseImageRunner):
                         # Combine the normalized first three components, the middle three components, and the modified last component
                         action_pred = torch.cat((normalized_first_three, action_pred[:, :, 3:6], last_component.unsqueeze(2)), dim=2)
                     
-                        action_pred[:, :, :3] *= 80
+                        # action_pred[:, :, :3] *= 80
                         
                         action = action_pred[:,action_dict['start']:action_dict['end']]
                         
