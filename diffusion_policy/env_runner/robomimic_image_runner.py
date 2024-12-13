@@ -27,7 +27,7 @@ import robomimic.utils.obs_utils as ObsUtils
 ###########################################################################
 from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
 
-robots = ['Panda']
+robots = ['IIWA']
 ###########################################################################
 
 
@@ -74,7 +74,8 @@ class RobomimicImageRunner(BaseImageRunner):
             ### Yilong
             ###########################################################################
             #decoder_model_path=None,
-            decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-bs1632_mlp-53-353.pth',
+            encoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_resnet-53.pth',
+            decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_mlp-53.pth',
             ###########################################################################
             
             n_envs=None
@@ -253,15 +254,16 @@ class RobomimicImageRunner(BaseImageRunner):
         
         # Yilong
         ###########################################################################
+        self.encoder_model_path = encoder_model_path
         self.decoder_model_path = decoder_model_path
         if self.decoder_model_path != None:
             cameras=["frontview_image", "sideview_image"]
-            stats_path='/home/yilong/Documents/ae_data/random_processing/iiwa16168/action_statistics_delta_position+gripper.npz'
+            stats_path='/home/yilong/Documents/ae_data/random_processing/iiwa16168/action_statistics_delta_action_norot.npz'
         
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             
             self.action_identifier = load_action_identifier(
-                conv_path=None,
+                conv_path=encoder_model_path,
                 mlp_path=decoder_model_path,
                 resnet_version='resnet18',
                 video_length=2,
@@ -344,7 +346,7 @@ class RobomimicImageRunner(BaseImageRunner):
                         flattened_input = action_pred.reshape(-1, feature_dim)  # (224, 512)
 
                         # Process with MLP
-                        output = self.action_identifier.forward_mlp(flattened_input)  # (224, 4)
+                        output = self.action_identifier.decode(flattened_input)  # (224, 4)
 
                         # Reshape back to (28, 8, 4)
                         output = output.view(batch_size, seq_len, -1)
@@ -354,16 +356,14 @@ class RobomimicImageRunner(BaseImageRunner):
                         # Concatenate the tensors along the third axis
                         action_pred = torch.cat((output[:, :, :3], rotation_zeros, output[:, :, 3:]), dim=2)
                         
-                        norms = torch.norm(action_pred[:, :, :3], dim=2, keepdim=True)
-                        normalized_first_three = action_pred[:, :, :3] / norms
+                        # norms = torch.norm(action_pred[:, :, :3], dim=2, keepdim=True)
+                        # normalized_first_three = action_pred[:, :, :3] / norms
 
                         # Set the last component to -1 if negative and 1 if positive
                         last_component = torch.sign(action_pred[:, :, -1])
 
                         # Combine the normalized first three components, the middle three components, and the modified last component
-                        action_pred = torch.cat((normalized_first_three, action_pred[:, :, 3:6], last_component.unsqueeze(2)), dim=2)
-                    
-                        # action_pred[:, :, :3] *= 80
+                        action_pred = torch.cat((action_pred[:, :, :6], last_component.unsqueeze(2)), dim=2)
                         
                         action = action_pred[:,action_dict['start']:action_dict['end']]
                         
