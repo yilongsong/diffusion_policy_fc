@@ -25,9 +25,10 @@ import robomimic.utils.obs_utils as ObsUtils
 
 ### Yilong
 ###########################################################################
-from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
+# from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
 
-robots = ['IIWA']
+robots = ['Panda', 'IIWA']
+# robots = ['IIWA']
 ###########################################################################
 
 
@@ -74,8 +75,13 @@ class RobomimicImageRunner(BaseImageRunner):
             ### Yilong
             ###########################################################################
             #decoder_model_path=None,
-            encoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_resnet-53.pth',
-            decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_mlp-53.pth',
+            # encoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_resnet-53.pth',
+            # decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_mlp-53.pth',
+            # conv_path = '/home/yilong/Documents/action_extractor/results/variational-iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_resnet-73.pth',
+            # mlp_path = '/home/yilong/Documents/action_extractor/results/variational-iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_mlp-73.pth',
+            # fc_mu_path = '/home/yilong/Documents/action_extractor/results/variational-iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_fc_mu-73.pth',
+            # fc_logvar_path = '/home/yilong/Documents/action_extractor/results/variational-iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-cosine+mse-bs1632_fc_logvar-73.pth',
+
             ###########################################################################
             
             n_envs=None
@@ -254,27 +260,33 @@ class RobomimicImageRunner(BaseImageRunner):
         
         # Yilong
         ###########################################################################
-        self.encoder_model_path = encoder_model_path
-        self.decoder_model_path = decoder_model_path
-        if self.decoder_model_path != None:
-            cameras=["frontview_image", "sideview_image"]
-            stats_path='/home/yilong/Documents/ae_data/random_processing/iiwa16168/action_statistics_delta_action_norot.npz'
+        # self.encoder_model_path = encoder_model_path
+        # self.decoder_model_path = decoder_model_path
+        # self.conv_path = conv_path
+        # self.mlp_path = mlp_path
+        # self.fc_mu_path = fc_mu_path
+        # self.fc_logvar_path = fc_logvar_path
+        # if self.decoder_model_path != None:
+        #     cameras=["frontview_image", "sideview_image"]
+        #     stats_path='/home/yilong/Documents/ae_data/random_processing/iiwa16168/action_statistics_delta_position+gripper.npz'
         
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        #     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             
-            self.action_identifier = load_action_identifier(
-                conv_path=encoder_model_path,
-                mlp_path=decoder_model_path,
-                resnet_version='resnet18',
-                video_length=2,
-                in_channels=len(cameras) * 6,  # Adjusted for multiple cameras
-                action_length=1,
-                num_classes=4,
-                num_mlp_layers=3,
-                stats_path=stats_path,
-                coordinate_system='global',
-                camera_name=cameras[0].split('_')[0]  # Use the first camera for initialization
-            ).to(device)
+        #     self.action_identifier = load_action_identifier(
+        #         conv_path=conv_path,
+        #         mlp_path=mlp_path,
+        #         fc_mu_path=fc_mu_path,
+        #         fc_logvar_path=fc_logvar_path,
+        #         resnet_version='resnet18',
+        #         video_length=2,
+        #         in_channels=len(cameras) * 6,  # Adjusted for multiple cameras
+        #         action_length=1,
+        #         num_classes=4,
+        #         num_mlp_layers=3,
+        #         stats_path=stats_path,
+        #         coordinate_system='global',
+        #         camera_name=cameras[0].split('_')[0]  # Use the first camera for initialization
+        #     ).to(device)
         ###########################################################################
 
     def run(self, policy: BaseImagePolicy):
@@ -337,41 +349,41 @@ class RobomimicImageRunner(BaseImageRunner):
                     
                     # Yilong
                     ###########################################################################
-                    if self.decoder_model_path != None:
-                        action_pred = action_dict['action_pred']
+                    # if self.decoder_model_path != None:
+                    #     action_pred = action_dict['action_pred']
                         
-                        batch_size, seq_len, feature_dim = action_pred.shape  # (28, 8, 512)
+                    #     batch_size, seq_len, feature_dim = action_pred.shape  # (28, 8, 512)
 
-                        # Reshape to combine batch and sequence dimensions
-                        flattened_input = action_pred.reshape(-1, feature_dim)  # (224, 512)
+                    #     # Reshape to combine batch and sequence dimensions
+                    #     flattened_input = action_pred.reshape(-1, feature_dim)  # (224, 512)
 
-                        # Process with MLP
-                        output = self.action_identifier.decode(flattened_input)  # (224, 4)
+                    #     # Process with MLP
+                    #     output = self.action_identifier.decode(flattened_input)  # (224, 4)
 
-                        # Reshape back to (28, 8, 4)
-                        output = output.view(batch_size, seq_len, -1)
+                    #     # Reshape back to (28, 8, 4)
+                    #     output = output.view(batch_size, seq_len, -1)
                         
-                        rotation_zeros = torch.zeros(output.shape[0], output.shape[1], 3).to(next(self.action_identifier.parameters()).device)
+                    #     rotation_zeros = torch.zeros(output.shape[0], output.shape[1], 3).to(next(self.action_identifier.parameters()).device)
 
-                        # Concatenate the tensors along the third axis
-                        action_pred = torch.cat((output[:, :, :3], rotation_zeros, output[:, :, 3:]), dim=2)
+                    #     # Concatenate the tensors along the third axis
+                    #     action_pred = torch.cat((output[:, :, :3] * 40, rotation_zeros, output[:, :, 3:]), dim=2)
                         
-                        # norms = torch.norm(action_pred[:, :, :3], dim=2, keepdim=True)
-                        # normalized_first_three = action_pred[:, :, :3] / norms
+                    #     # norms = torch.norm(action_pred[:, :, :3], dim=2, keepdim=True)
+                    #     # normalized_first_three = action_pred[:, :, :3] / norms
 
-                        # Set the last component to -1 if negative and 1 if positive
-                        last_component = torch.sign(action_pred[:, :, -1])
+                    #     # Set the last component to -1 if negative and 1 if positive
+                    #     last_component = torch.sign(action_pred[:, :, -1])
 
-                        # Combine the normalized first three components, the middle three components, and the modified last component
-                        action_pred = torch.cat((action_pred[:, :, :6], last_component.unsqueeze(2)), dim=2)
+                    #     # Combine the normalized first three components, the middle three components, and the modified last component
+                    #     action_pred = torch.cat((action_pred[:, :, :6], last_component.unsqueeze(2)), dim=2)
                         
-                        action = action_pred[:,action_dict['start']:action_dict['end']]
+                    #     action = action_pred[:,action_dict['start']:action_dict['end']]
                         
-                        action_dict['action_pred'] = action_pred
-                        action_dict['action'] = action
+                    #     action_dict['action_pred'] = action_pred
+                    #     action_dict['action'] = action
                         
-                        del action_dict['start']
-                        del action_dict['end']
+                    #     del action_dict['start']
+                    #     del action_dict['end']
                     ###########################################################################
 
                 # device_transfer

@@ -79,7 +79,7 @@ class VideoRecorder:
             input_pix_fmt='rgb24',
             output_pix_fmt='yuv420p',
             crf=18,
-            profile='high',
+            #profile='high',
             **kwargs
         ):
         obj = cls(
@@ -89,7 +89,7 @@ class VideoRecorder:
             pix_fmt=output_pix_fmt,
             options={
                 'crf': str(crf),
-                'profile': profile
+                #'profile': profile
             },
             **kwargs
         )

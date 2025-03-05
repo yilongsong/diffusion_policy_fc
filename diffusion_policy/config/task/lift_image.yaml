@@ -4,25 +4,25 @@ shape_meta: &shape_meta
   # acceptable types: rgb, low_dim
   obs:
     frontview_image:
-      shape: [3, 128, 128]
+      shape: [3, 480, 640]
       type: rgb
     # frontview_rgbd:
     #   shape: [4, 128, 128]
     #   type: rgbd
     agentview_image:
-      shape: [3, 128, 128]
+      shape: [3, 480, 640]
       type: rgb
     # agentview_rgbd:
     #   shape: [4, 128, 128]
     #   type: rgbd
     sideview_image:
-      shape: [3, 128, 128]
+      shape: [3, 480, 640]
       type: rgb
     # sideview_rgbd:
     #   shape: [4, 128, 128]
     #   type: rgbd
     robot0_eye_in_hand_image:
-      shape: [3, 128, 128]
+      shape: [3, 480, 640]
       type: rgb
     robot0_eef_pos:
       shape: [3]
@@ -32,14 +32,16 @@ shape_meta: &shape_meta
     robot0_gripper_qpos:
       shape: [2]
   action: 
-    shape: [512]
+    shape: [7]
+    # shape: [512]
     # shape: [7]
 
 task_name: &task_name lift
 dataset_type: &dataset_type ph
 # dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/image.hdf5
-dataset_path: &dataset_path data/robomimic/datasets/lift/obs/lift_200_cropped_rgbd+color_mask.hdf5
-val_dataset_path: &val_dataset_path data/robomimic/datasets/lift/obs/lift_200_cropped_rgbd+color_mask.hdf5
+# data/robomimic/datasets/lift/obs/lift_300_obs_megapose.hdf5
+dataset_path: &dataset_path data/robomimic/datasets/lift/obs/lift_1000_obs.hdf5
+val_dataset_path: &val_dataset_path data/robomimic/datasets/lift/obs/lift_1000_obs.hdf5
 abs_action: &abs_action False
 
 env_runner:
@@ -51,7 +53,7 @@ env_runner:
   n_train_vis: 1
   train_start_idx: 0
   n_test: 50
-  n_test_vis: 3
+  n_test_vis: 50
   test_start_seed: 100000
   # use python's eval function as resolver, single-quoted string as argument
   max_steps: ${eval:'500 if "${task.dataset_type}" == "mh" else 400'}

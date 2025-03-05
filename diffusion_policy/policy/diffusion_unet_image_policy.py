@@ -14,7 +14,7 @@ from diffusion_policy.common.pytorch_util import dict_apply
 
 ### Yilong
 ###########################################################################
-from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
+# from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
 ###########################################################################
 
 class DiffusionUnetImagePolicy(BaseImagePolicy):
@@ -36,7 +36,7 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
             ### Yilong
             ###########################################################################
             #decoder_model_path=None,
-            decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-bs1632_mlp-53-353.pth',
+            #decoder_model_path='/home/yilong/Documents/action_extractor/results/iiwa16168,lift1000-cropped_rgbd+color_mask-delta_position+gripper-frontside-bs1632_mlp-53-353.pth',
             ###########################################################################
             # parameters passed to step
             **kwargs):
@@ -92,7 +92,7 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
         
         # Yilong
         ###########################################################################
-        self.decoder_model_path = decoder_model_path
+        # self.decoder_model_path = decoder_model_path
         ###########################################################################
     
     # ========= inference  ============
@@ -202,9 +202,9 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
         
         # Yilong
         ###########################################################################
-        if self.decoder_model_path != None:
-            result['start'] = start
-            result['end'] = end
+        # if self.decoder_model_path != None:
+        #     result['start'] = start
+        #     result['end'] = end
         ###########################################################################  
         
         return result
