@@ -8,6 +8,7 @@ import tqdm
 import h5py
 import math
 import dill
+import copy
 import wandb.sdk.data_types.video as wv
 from diffusion_policy.gym_util.async_vector_env import AsyncVectorEnv
 from diffusion_policy.gym_util.sync_vector_env import SyncVectorEnv
@@ -89,7 +90,7 @@ class RobomimicImageRunner(BaseImageRunner):
         super().__init__(output_dir)
 
         if n_envs is None:
-            n_envs = n_train + n_test
+            n_envs = len(robots) * (n_train + n_test)
 
         # assert n_obs_steps <= n_action_steps
         dataset_path = os.path.expanduser(dataset_path)
@@ -107,90 +108,112 @@ class RobomimicImageRunner(BaseImageRunner):
             env_meta['env_kwargs']['controller_configs']['control_delta'] = False
             rotation_transformer = RotationTransformer('axis_angle', 'rotation_6d')
 
-        def env_fn():
-            env_meta['env_kwargs']['robots'] = robots
-            robomimic_env = create_env(
-                env_meta=env_meta, 
-                shape_meta=shape_meta
-            )
-            # Robosuite's hard reset causes excessive memory consumption.
-            # Disabled to run more envs.
-            # https://github.com/ARISE-Initiative/robosuite/blob/92abf5595eddb3a845cd1093703e5a3ccd01e77e/robosuite/environments/base.py#L247-L248
-            robomimic_env.env.hard_reset = False
-            return MultiStepWrapper(
-                VideoRecordingWrapper(
-                    RobomimicImageWrapper(
-                        env=robomimic_env,
-                        shape_meta=shape_meta,
-                        init_state=None,
-                        render_obs_key=render_obs_key
+        def make_env_fn(robot, render=True):
+            def env_fn():
+                # Work on a copy of env_meta so that changes here don't affect others.
+                local_env_meta = copy.deepcopy(env_meta)
+                local_env_meta['env_kwargs']['robots'] = [robot]  # Use a single robot
+                robomimic_env = create_env(env_meta=local_env_meta, shape_meta=shape_meta, enable_render=render)
+                # Disable hard reset for memory efficiency.
+                robomimic_env.env.hard_reset = False
+                return MultiStepWrapper(
+                    VideoRecordingWrapper(
+                        RobomimicImageWrapper(
+                            env=robomimic_env,
+                            shape_meta=shape_meta,
+                            init_state=None,
+                            render_obs_key=render_obs_key
+                        ),
+                        video_recoder=VideoRecorder.create_h264(
+                            fps=fps,
+                            codec='h264',
+                            input_pix_fmt='rgb24',
+                            crf=crf,
+                            thread_type='FRAME',
+                            thread_count=1
+                        ),
+                        file_path=None,
+                        steps_per_render=steps_per_render
                     ),
-                    video_recoder=VideoRecorder.create_h264(
-                        fps=fps,
-                        codec='h264',
-                        input_pix_fmt='rgb24',
-                        crf=crf,
-                        thread_type='FRAME',
-                        thread_count=1
-                    ),
-                    file_path=None,
-                    steps_per_render=steps_per_render
-                ),
-                n_obs_steps=n_obs_steps,
-                n_action_steps=n_action_steps,
-                max_episode_steps=max_steps
-            )
-        
-        # For each process the OpenGL context can only be initialized once
-        # Since AsyncVectorEnv uses fork to create worker process,
-        # a separate env_fn that does not create OpenGL context (enable_render=False)
-        # is needed to initialize spaces.
-        def dummy_env_fn():
-            robomimic_env = create_env(
-                    env_meta=env_meta, 
-                    shape_meta=shape_meta,
-                    enable_render=False
+                    n_obs_steps=n_obs_steps,
+                    n_action_steps=n_action_steps,
+                    max_episode_steps=max_steps
                 )
-            return MultiStepWrapper(
-                VideoRecordingWrapper(
-                    RobomimicImageWrapper(
-                        env=robomimic_env,
-                        shape_meta=shape_meta,
-                        init_state=None,
-                        render_obs_key=render_obs_key
-                    ),
-                    video_recoder=VideoRecorder.create_h264(
-                        fps=fps,
-                        codec='h264',
-                        input_pix_fmt='rgb24',
-                        crf=crf,
-                        thread_type='FRAME',
-                        thread_count=1
-                    ),
-                    file_path=None,
-                    steps_per_render=steps_per_render
-                ),
-                n_obs_steps=n_obs_steps,
-                n_action_steps=n_action_steps,
-                max_episode_steps=max_steps
-            )
+            return env_fn
 
-        env_fns = [env_fn] * n_envs
+        def make_dummy_env_fn(robot):
+            def dummy_env_fn():
+                local_env_meta = copy.deepcopy(env_meta)
+                local_env_meta['env_kwargs']['robots'] = [robot]
+                robomimic_env = create_env(env_meta=local_env_meta, shape_meta=shape_meta, enable_render=False)
+                return MultiStepWrapper(
+                    VideoRecordingWrapper(
+                        RobomimicImageWrapper(
+                            env=robomimic_env,
+                            shape_meta=shape_meta,
+                            init_state=None,
+                            render_obs_key=render_obs_key
+                        ),
+                        video_recoder=VideoRecorder.create_h264(
+                            fps=fps,
+                            codec='h264',
+                            input_pix_fmt='rgb24',
+                            crf=crf,
+                            thread_type='FRAME',
+                            thread_count=1
+                        ),
+                        file_path=None,
+                        steps_per_render=steps_per_render
+                    ),
+                    n_obs_steps=n_obs_steps,
+                    n_action_steps=n_action_steps,
+                    max_episode_steps=max_steps
+                )
+            return dummy_env_fn
+
+        env_fns = []
+        for robot in robots:
+            for _ in range(n_train + n_test):
+                env_fns.append(make_env_fn(robot, render=True))
         env_seeds = list()
         env_prefixs = list()
         env_init_fn_dills = list()
 
         # train
         with h5py.File(dataset_path, 'r') as f:
-            for i in range(n_train):
-                train_idx = train_start_idx + i
-                enable_render = i < n_train_vis
-                init_state = f[f'data/demo_{train_idx}/states'][0]
+            for robot in robots:
+                for i in range(n_train):
+                    train_idx = train_start_idx + i
+                    enable_render = i < n_train_vis
+                    init_state = f[f'data/demo_{train_idx}/states'][0]
 
-                def init_fn(env, init_state=init_state, 
-                    enable_render=enable_render):
-                    # setup rendering
-                    # video_wrapper
+                    def init_fn(env, init_state=init_state, enable_render=enable_render):
+                        # setup rendering
+                        assert isinstance(env.env, VideoRecordingWrapper)
+                        env.env.video_recoder.stop()
+                        env.env.file_path = None
+                        if enable_render:
+                            filename = pathlib.Path(output_dir).joinpath(
+                                'media', wv.util.generate_id() + ".mp4")
+                            filename.parent.mkdir(parents=False, exist_ok=True)
+                            filename = str(filename)
+                            env.env.file_path = filename
+
+                        # assign the initial state
+                        assert isinstance(env.env.env, RobomimicImageWrapper)
+                        env.env.env.init_state = init_state
+
+                    env_seeds.append(f"{robot}_train_{train_idx}")
+                    env_prefixs.append(f'{robot}/train/')
+                    env_init_fn_dills.append(dill.dumps(init_fn))
+        
+        # test
+        for robot in robots:
+            for i in range(n_test):
+                seed = test_start_seed + i
+                enable_render = i < n_test_vis
+
+                def init_fn(env, seed=seed, enable_render=enable_render):
                     assert isinstance(env.env, VideoRecordingWrapper)
                     env.env.video_recoder.stop()
                     env.env.file_path = None
@@ -201,45 +224,18 @@ class RobomimicImageRunner(BaseImageRunner):
                         filename = str(filename)
                         env.env.file_path = filename
 
-                    # switch to init_state reset
+                    # for test rollouts, reset using seed
                     assert isinstance(env.env.env, RobomimicImageWrapper)
-                    env.env.env.init_state = init_state
+                    env.env.env.init_state = None
+                    env.seed(seed)
 
-                env_seeds.append(train_idx)
-                env_prefixs.append('train/')
+                env_seeds.append(f"{robot}_test_{seed}")
+                env_prefixs.append(f'{robot}/test/')
                 env_init_fn_dills.append(dill.dumps(init_fn))
-        
-        # test
-        for i in range(n_test):
-            seed = test_start_seed + i
-            enable_render = i < n_test_vis
 
-            def init_fn(env, seed=seed, 
-                enable_render=enable_render):
-                # setup rendering
-                # video_wrapper
-                assert isinstance(env.env, VideoRecordingWrapper)
-                env.env.video_recoder.stop()
-                env.env.file_path = None
-                if enable_render:
-                    filename = pathlib.Path(output_dir).joinpath(
-                        'media', wv.util.generate_id() + ".mp4")
-                    filename.parent.mkdir(parents=False, exist_ok=True)
-                    filename = str(filename)
-                    env.env.file_path = filename
-
-                # switch to seed reset
-                assert isinstance(env.env.env, RobomimicImageWrapper)
-                env.env.env.init_state = None
-                env.seed(seed)
-
-            env_seeds.append(seed)
-            env_prefixs.append('test/')
-            env_init_fn_dills.append(dill.dumps(init_fn))
-
+        dummy_env_fn = make_dummy_env_fn(robots[0])
         env = AsyncVectorEnv(env_fns, dummy_env_fn=dummy_env_fn)
         # env = SyncVectorEnv(env_fns)
-
 
         self.env_meta = env_meta
         self.env = env
