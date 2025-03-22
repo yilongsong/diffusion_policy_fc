@@ -11,7 +11,6 @@
 #SBATCH --mail-user=yilong_song@brown.edu
 
 # Load modules and activate conda environment
-module load miniconda
 module load cuda/11.8.0
 module load cudnn/9.1.1.17
 conda activate robodiff
