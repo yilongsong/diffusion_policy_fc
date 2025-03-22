@@ -46,5 +46,5 @@ echo "Submitting job with overrides: ${overrides}"
 echo "Hydra run directory: ${run_dir}"
 
 # Submit job via Slurm
-sbatch --job-name="train_diffusion" train_diffusion.sbatch \
+sbatch --job-name="train_diffusion" train.sbatch \
        --export=ALL,OVERRIDES="${overrides}",HYDRA_RUN_DIR="${run_dir}"
