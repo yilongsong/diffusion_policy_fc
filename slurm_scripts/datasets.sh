@@ -9,7 +9,7 @@
 # Default overrides:
 seed=42
 device="cuda:0"
-config_dir="diffusion_policy/config"
+config_dir="./diffusion_policy/config"
 config_name="train_diffusion_unet_image_workspace.yaml"
 
 # If a dataset_path override is provided, use it:
