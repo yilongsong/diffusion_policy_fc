@@ -28,8 +28,16 @@ else
     note_override_arg=""
 fi
 
+# If a checkpoint path is provided:
+if [ -n "$3" ]; then
+    checkpoint_path=$3
+    checkpoint_override_arg="checkpoint.restore_path=${checkpoint_path} training.resume=True"
+else
+    checkpoint_override_arg=""
+fi
+
 # Compose additional Hydra override arguments (you can add more here)
-overrides="training.seed=${seed} training.device=${device} ${dataset_override_arg} ${note_override_arg}"
+overrides="training.seed=${seed} training.device=${device} ${dataset_override_arg} ${note_override_arg} ${checkpoint_override_arg}"
 
 # Construct a run directory string (using date) for Hydra
 run_dir="data/outputs/$(date +%Y.%m.%d)/$(date +%H.%M.%S)_train_diffusion_unet_image_${dataset_path_override:-default}"
