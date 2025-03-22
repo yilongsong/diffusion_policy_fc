@@ -17,6 +17,8 @@ conda activate robodiff
 
 export HYDRA_FULL_ERROR=1
 
+cd /oscar/home/ysong135/Documents/diffusion_policy
+
 # Launch training using Hydra: we pass our overrides via the command line.
 python train.py \
   --config-dir=${config_dir} \

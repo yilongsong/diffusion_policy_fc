@@ -40,7 +40,7 @@ fi
 overrides="training.seed=${seed} training.device=${device} ${dataset_override_arg} ${note_override_arg} ${checkpoint_override_arg}"
 
 # Construct a run directory string (using date) for Hydra
-run_dir="data/outputs/$(date +%Y.%m.%d)/$(date +%H.%M.%S)_train_diffusion_unet_image_${dataset_path_override:-default}"
+run_dir="/users/ysong135/scratch/datasets/diffpo/checkpoints/$(date +%Y.%m.%d)/$(date +%H.%M.%S)_train_diffusion_unet_image_${dataset_path_override:-default}"
 
 echo "Submitting job with overrides: ${overrides}"
 echo "Hydra run directory: ${run_dir}"
