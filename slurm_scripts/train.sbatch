@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -N 1
-#SBATCH --time=100:00:00
+#SBATCH --time=200:00:00
 #SBATCH -p 3090-gcondo
 #SBATCH --gres=gpu:1       # Adjust the number of GPUs as needed
 #SBATCH --mem=128G
