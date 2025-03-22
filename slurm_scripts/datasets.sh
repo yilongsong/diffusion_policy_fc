@@ -47,4 +47,4 @@ echo "Hydra run directory: ${run_dir}"
 
 # Submit job via Slurm
 sbatch --job-name="train_diffusion" slurm_scripts/train.sbatch \
-       --export=ALL,OVERRIDES="${overrides}",HYDRA_RUN_DIR="${run_dir}"
+       --export=ALL,config_dir="${config_dir}",config_name="${config_name}",OVERRIDES="${overrides}",HYDRA_RUN_DIR="${run_dir}"
