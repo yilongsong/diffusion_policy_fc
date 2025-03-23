@@ -13,6 +13,9 @@
 # Load modules and activate conda environment
 module load cuda/11.8.0
 module load cudnn/9.1.1.17
+
+source $HOME/ysong135/miniforge3/etc/profile.d/conda.sh
+
 conda activate robodiff
 
 export HYDRA_FULL_ERROR=1
