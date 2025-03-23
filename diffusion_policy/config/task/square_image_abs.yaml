@@ -26,6 +26,10 @@ dataset_type: &dataset_type ph
 dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_black_matte0.0_panda200_iiwa50.hdf5
 abs_action: &abs_action True
 
+checkpoint:
+  restore_path: "/path/to/your/checkpoint.ckpt"  # Replace with your checkpoint path
+  resume: True
+
 env_runner:
   _target_: diffusion_policy.env_runner.robomimic_image_runner.RobomimicImageRunner
   dataset_path: *dataset_path
