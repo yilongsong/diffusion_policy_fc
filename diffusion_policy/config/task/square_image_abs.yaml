@@ -23,7 +23,8 @@ task_name: &task_name square
 dataset_type: &dataset_type ph
 # dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_pseudo_black_matte0.0_abs.hdf5
 # dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_orig_black_matte0.0_iiwa.hdf5
-dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_black_matte0.0_panda200_iiwa50.hdf5
+# dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_black_matte0.0_panda200_iiwa50.hdf5
+dataset_path: &dataset_path /users/ysong135/scratch/datasets/diffpo/datasets/square_d0_obs_black_matte0.0_panda200_iiwa50.hdf5
 abs_action: &abs_action True
 
 env_runner:
