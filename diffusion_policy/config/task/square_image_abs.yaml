@@ -27,9 +27,9 @@ dataset_type: &dataset_type ph
 dataset_path: &dataset_path /users/ysong135/scratch/datasets/diffpo/datasets/square_d0_obs_black_matte0.0_panda200_iiwa50.hdf5
 abs_action: &abs_action True
 
-checkpoint:
-  restore_path: "/path/to/your/checkpoint.ckpt"  # Replace with your checkpoint path
-  resume: True
+# checkpoint:
+#   restore_path: "/users/ysong135/scratch/datasets/diffpo/checkpoints/latest.ckpt"  # Replace with your checkpoint path
+#   resume: True
 
 env_runner:
   _target_: diffusion_policy.env_runner.robomimic_image_runner.RobomimicImageRunner
@@ -39,8 +39,8 @@ env_runner:
   n_train: 6
   n_train_vis: 2
   train_start_idx: 0
-  n_test: 50
-  n_test_vis: 4
+  n_test: 10
+  n_test_vis: 2
   test_start_seed: 100000
   # use python's eval function as resolver, single-quoted string as argument
   max_steps: ${eval:'1000 if "${task.dataset_type}" == "mh" else 1000'}
