@@ -2,7 +2,7 @@
 
 #SBATCH -N 1
 #SBATCH -n 16
-#SBATCH --time=200:00:00
+#SBATCH --time=800:00:00
 #SBATCH -p 3090-gcondo --gres=gpu:1 --gres-flags=enforce-binding
 #SBATCH --mem=128G
 #SBATCH -o /oscar/home/ysong135/Documents/diffusion_policy/outputs/%j.out
@@ -12,12 +12,6 @@
 
 # Load modules and activate conda environment
 module purge
-# module load miniforge/23.11.0-0s
-# source /oscar/runtime/software/external/miniforge/23.11.0-0/etc/profile.d/conda.sh
-
-# module load cuda/11.8.0
-# module load cudnn/8.7.0.84
-# module load patchelf
 
 module load miniforge/23.11.0-0s
 source /oscar/runtime/software/external/miniforge/23.11.0-0/etc/profile.d/conda.sh

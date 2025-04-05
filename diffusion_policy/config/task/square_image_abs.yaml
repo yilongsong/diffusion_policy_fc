@@ -21,10 +21,6 @@ shape_meta: &shape_meta
 
 task_name: &task_name square
 dataset_type: &dataset_type ph
-# dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_pseudo_black_matte0.0_abs.hdf5
-# dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_orig_black_matte0.0_iiwa.hdf5
-# dataset_path: &dataset_path data/robomimic/datasets/${task.task_name}/${task.dataset_type}/square_d0_obs_black_matte0.0_panda200_iiwa50.hdf5
-# dataset_path: &dataset_path /users/ysong135/scratch/datasets/diffpo/datasets/square_d0_obs_black_matte0.0_panda200_iiwa100.hdf5
 dataset_path: &dataset_path /users/ysong135/scratch/datasets/diffpo/datasets/square_d0_obs_black_matte0.0_panda200_iiwa150.hdf5
 abs_action: &abs_action True
 
@@ -59,7 +55,7 @@ env_runner:
 dataset:
   _target_: diffusion_policy.dataset.robomimic_replay_image_dataset.RobomimicReplayImageDataset
   shape_meta: *shape_meta
-  dataset_path: *dataset_path
+  dataset_path: ${extra.dataset_path}
   horizon: ${horizon}
   pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
   pad_after: ${eval:'${n_action_steps}-1'}
