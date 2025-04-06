@@ -28,8 +28,8 @@ import robomimic.utils.obs_utils as ObsUtils
 ###########################################################################
 # from action_extractor.action_identifier import ActionIdentifier, load_action_identifier
 
-robots = ['Panda', 'IIWA']
-# robots = ['IIWA']
+# robots = ['Panda', 'IIWA']
+robots = ['IIWA']
 ###########################################################################
 
 

@@ -1,4 +1,4 @@
-name: square_image_abs
+name: three_piece_assembly_image_abs_image_abs
 
 shape_meta: &shape_meta
   # acceptable types: rgb, low_dim
@@ -19,14 +19,14 @@ shape_meta: &shape_meta
   action: 
     shape: [10]
 
-task_name: &task_name square
+task_name: &task_name three_piece_assembly_image_abs
 dataset_type: &dataset_type ph
-dataset_path: &dataset_path /users/ysong135/scratch/datasets/diffpo/datasets/square_d0_obs_black_matte0.0_panda200_iiwa150.hdf5
+dataset_path: &dataset_path /home/yilong/Documents/datasets/source/three_piece_assembly_image_abs_d0_abs_obs_200.hdf5
 abs_action: &abs_action True
 
-# checkpoint:
-#   restore_path: "/users/ysong135/scratch/datasets/diffpo/checkpoints/latest.ckpt"  # Replace with your checkpoint path
-#   resume: True
+checkpoint:
+  restore_path: "/path/to/your/checkpoint.ckpt"  # Replace with your checkpoint path
+  resume: True
 
 env_runner:
   _target_: diffusion_policy.env_runner.robomimic_image_runner.RobomimicImageRunner
@@ -37,10 +37,10 @@ env_runner:
   n_train_vis: 2
   train_start_idx: 0
   n_test: 50
-  n_test_vis: 10
+  n_test_vis: 4
   test_start_seed: 100000
   # use python's eval function as resolver, single-quoted string as argument
-  max_steps: ${eval:'1000 if "${task.dataset_type}" == "mh" else 600'}
+  max_steps: ${eval:'1000 if "${task.dataset_type}" == "mh" else 1000'}
   n_obs_steps: ${n_obs_steps}
   n_action_steps: ${n_action_steps}
   render_obs_key: 'agentview_image'

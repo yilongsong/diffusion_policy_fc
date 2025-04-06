@@ -4,7 +4,7 @@
 seed=42
 device="cuda:0"
 config_dir="./diffusion_policy/config"
-config_name="train_diffusion_unet_image_workspace.yaml"
+default_config_name="train_diffusion_unet_image_workspace.yaml"
 
 # If no dataset paths are passed as arguments, use a default dataset path.
 if [ "$#" -eq 0 ]; then
@@ -21,15 +21,27 @@ for dataset_path in "${dataset_paths[@]}"; do
     # Extract a base name from the dataset path for naming the run.
     dataset_name=$(basename "${dataset_path}" .hdf5)
     
+    # Determine the config name based on the dataset path.
+    config_name="${default_config_name}"
+    if [[ "${dataset_path}" == *"square"* ]]; then
+        config_name="square_unet.yaml"
+    elif [[ "${dataset_path}" == *"coffee"* ]]; then
+        config_name="coffee_unet.yaml"
+    elif [[ "${dataset_path}" == *"stack"* ]]; then
+        config_name="stack_unet.yaml"
+    elif [[ "${dataset_path}" == *"three_piece_assembly"* ]]; then
+        config_name="three_piece_assembly_unet.yaml"
+    fi
+    
     # Create a unique run directory incorporating the dataset name and timestamp.
     run_dir="/users/ysong135/scratch/datasets/diffpo/checkpoints/$(date +%Y.%m.%d)/$(date +%H.%M.%S)_${dataset_name}"
     
     echo "Submitting job for dataset: ${dataset_path}"
     echo "Hydra run directory: ${run_dir}"
+    echo "Using config file: ${config_name}"
     
     sbatch --job-name="job_${dataset_name}" \
            --export=ALL,config_dir="${config_dir}",config_name="${config_name}",OVERRIDES="${overrides}",HYDRA_RUN_DIR="${run_dir}" \
            slurm_scripts/train.sbatch
 
-    sleep 1  # slight pause to ensure unique timestamps if needed
 done
